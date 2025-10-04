@@ -1,9 +1,7 @@
-#trade_pipeline.py
 from dotenv import load_dotenv
 import os
 from marketstack_etl.assets.trade_etl import (extract_symbols,extract_trade, transform)
 from marketstack_etl.connectors.trade_api import MarketstackApiClient
-
 
 if __name__ == "__main__":
     load_dotenv()

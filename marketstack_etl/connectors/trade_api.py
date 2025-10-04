@@ -1,4 +1,3 @@
-#trade_api.py
 import requests
 
 class MarketstackApiClient:

@@ -1,4 +1,3 @@
-#trade_etl.py
 from urllib import response
 import pandas as pd
 from pathlib import Path
@@ -6,7 +5,6 @@ from sqlalchemy import Table, MetaData
 from logging import exception
 from marketstack_etl.connectors.trade_api import MarketstackApiClient
 from marketstack_etl.connectors.postgresql import PostgreSqlClient
-#api_key = "46a991bb3e5569e92abdabcfe4070214"
 
 def extract_symbols(server_name,database_name,username,password,port=5432) ->pd.DataFrame:
     client = PostgreSqlClient(

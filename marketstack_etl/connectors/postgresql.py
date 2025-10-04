@@ -1,4 +1,3 @@
-#postgresql.py
 from sqlalchemy import create_engine, Table, MetaData
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
