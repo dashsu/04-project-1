@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import pandas as pd
 
 class PostgreSqlClient:
-
+    # Client for the PostgreSQL Database
     def __init__(self, server_name: str,database_name: str,username: str,password: str,port=5432):
         self.server_name = server_name
         self.database_name = database_name
