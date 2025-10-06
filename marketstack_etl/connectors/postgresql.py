@@ -23,6 +23,7 @@ class PostgreSqlClient:
         self.engine = create_engine(connection_url)
 
     def read_table(self, table_name: str) -> pd.DataFrame:
-        df_symbol = pd.read_sql_table(table_name,self.engine)
-        return df_symbol
+        # Method to read a table from the DB into a pandas dataframe
+        df = pd.read_sql_table(table_name,self.engine)
+        return df
 

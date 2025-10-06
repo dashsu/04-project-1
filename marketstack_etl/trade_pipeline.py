@@ -55,10 +55,6 @@ if __name__ == "__main__":
     #stock_information = pd.read_csv("stock_information2.csv")
 
     # Transform the Pandas Dataframe into a list of dictionaries
-    stock_information["volume"] = stock_information["volume"].astype('Int64')
-    stock_information["date"] = stock_information["date"].astype('str')
-    stock_information["etl_load_timestamp"] = stock_information["etl_load_timestamp"].astype('str')
-
     stock_information = stock_information.to_dict('records')
 
 

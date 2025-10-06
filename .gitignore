@@ -2,4 +2,4 @@
 __pycache__/
 # Ignore environment variables / secrets
 .env
-.ipynb
+*.ipynb

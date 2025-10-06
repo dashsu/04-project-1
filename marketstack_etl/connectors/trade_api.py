@@ -1,6 +1,7 @@
 import requests
 
 class MarketstackApiClient:
+    # Class to handle API requests
     def __init__(self,access_key: str):
         self.base_url = "http://api.marketstack.com/v2/eod"
         if access_key is None:
@@ -8,6 +9,7 @@ class MarketstackApiClient:
         self.access_key = access_key
 
     def get_trade(self, symbol: str) -> dict:
+        # Use the API to get the information
         params ={"symbols" : symbol,"access_key" : self.access_key}
         response = requests.get(f"http://api.marketstack.com/v2/eod", params=params)
         if response.status_code == 200:
