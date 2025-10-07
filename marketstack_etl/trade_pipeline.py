@@ -5,14 +5,19 @@ from sqlalchemy import create_engine, Table, MetaData, Column, inspect
 from sqlalchemy.dialects import postgresql
 from jinja2 import Environment, FileSystemLoader, Template
 import pandas as pd
+import json
+from loguru import logger
 
 from assets.trade_etl import load, extract_symbols, extract_trade, transform
 from connectors.trade_api import MarketstackApiClient
 from connectors.postgresql import PostgreSqlClient
 from assets.helpers import get_schema_metadata
-
+from assets.helpers import setup_logger
 
 if __name__ == "__main__":
+
+    logger = setup_logger()
+    logger.info("Pipeline Starting")
 
     # Load enviroment variables
     load_dotenv()
@@ -59,6 +64,7 @@ if __name__ == "__main__":
 
 
     # Load the stock data into a table in our database
+    logger.info("Load Process starting")
     source_metadata = get_schema_metadata(engine=Postgre_Client.engine)
 
     load(
@@ -67,7 +73,7 @@ if __name__ == "__main__":
             engine=Postgre_Client.engine,
             source_metadata=source_metadata
         )
-    
+    logger.info("Data Loading Process Finished!")
 
     
 

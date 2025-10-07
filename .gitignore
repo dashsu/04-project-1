@@ -3,3 +3,5 @@ __pycache__/
 # Ignore environment variables / secrets
 .env
 *.ipynb
+*.csv
+*.jsonl
