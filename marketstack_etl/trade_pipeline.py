@@ -6,10 +6,10 @@ from sqlalchemy.dialects import postgresql
 from jinja2 import Environment, FileSystemLoader, Template
 import pandas as pd
 
-from assets.trade_etl import load, extract_symbols, extract_trade, transform
-from connectors.trade_api import MarketstackApiClient
-from connectors.postgresql import PostgreSqlClient
-from assets.helpers import get_schema_metadata
+from .assets.trade_etl import load, extract_symbols, extract_trade, transform
+from .connectors.trade_api import MarketstackApiClient
+from .connectors.postgresql import PostgreSqlClient
+from .assets.helpers import get_schema_metadata
 
 
 if __name__ == "__main__":
@@ -32,20 +32,22 @@ if __name__ == "__main__":
     TARGET_PORT = os.environ.get("TARGET_PORT")
 
     # API key for Markets API
-    API_KEY = os.environ.get("MARKET_APIKEY")
+    ACCESS_KEY = os.environ.get("ACCESS_KEY")
 
     # Target Table name
     table_name = os.environ.get("TARGET_TABLE_NAME")
 
     # Create the clients for the connections
     Postgre_Client = PostgreSqlClient(SOURCE_SERVER_NAME, SOURCE_DATABASE_NAME, SOURCE_DB_USERNAME, SOURCE_DB_PASSWORD, SOURCE_PORT)
-    API_Client = MarketstackApiClient(API_KEY)
+    Marketstack_Client= MarketstackApiClient(ACCESS_KEY)
+
+    target_engine = Postgre_Client.engine
 
     # Extract the symbols in our database table
     symbols = extract_symbols(Postgre_Client)
 
     # Extract the stock information for the symbols in our database
-    stock_information = extract_trade(API_Client, symbols)
+    stock_information = extract_trade(Marketstack_Client, symbols,target_engine,table_name)
 
     # Transform the stock information
     stock_information = transform(stock_information)
@@ -67,11 +69,3 @@ if __name__ == "__main__":
             engine=Postgre_Client.engine,
             source_metadata=source_metadata
         )
-    
-
-    
-
-
-    
-    
-    

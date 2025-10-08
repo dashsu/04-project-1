@@ -1,38 +1,77 @@
-from urllib import response
-import pandas as pd
-from pathlib import Path
-from sqlalchemy import Table, MetaData
-from logging import exception
-from datetime import datetime
-
-from dotenv import load_dotenv
 import os
-from sqlalchemy.engine import URL, Engine
+from urllib import response
+from pathlib import Path
+from datetime import datetime, timedelta
+from logging import exception
+from dotenv import load_dotenv
+import pandas as pd
 from sqlalchemy import create_engine, Table, MetaData, Column, inspect
+from sqlalchemy.engine import URL, Engine
 from sqlalchemy.dialects import postgresql
 from jinja2 import Environment, FileSystemLoader, Template
+from marketstack_etl.connectors.trade_api import MarketstackApiClient
 
-
-# Read the list of tickers from a source client into a DataFrame
+load_dotenv()
+# Read the list of symbols from a source client into a DataFrame
 def extract_symbols(client) ->pd.DataFrame:
-    df_symbols = client.read_table("tickers")
+    df_symbols = client.read_table("symbols")
     return df_symbols
 
 # Iterate symbols and pull raw trade payloads from the Marketstack client
-def extract_trade(marketstack_api_client, df_symbols: pd.DataFrame) -> pd.DataFrame:
+   
+def extract_trade(marketstack_api_client: MarketstackApiClient, 
+                df_symbols: pd.DataFrame,
+                target_engine,
+                target_table
+                ) -> pd.DataFrame:
+
+#df_symbol = pd.read_csv(symbol_path)
+#extract incrimentally for existing symbol and full for new sysmols 
+
+#first check if the taget thable exist in postgres
+
+    inspector = inspect(target_engine)
+    if not inspector.has_table(target_table):
+        print(f"Target table {target_table} not found. Do a full extract for all symbols.")
+        symbol_max_dates = {}
+    else:
+        query = f"Select symbol, max(date) as max_date from {target_table} group by symbol"
+        df_symbol_max = pd.read_sql(query, target_engine)
+
+        if not df_symbol_max.empty:
+            symbol_max_dates = (df_symbol_max.set_index("symbol")["max_date"].to_dict())
+        else:
+            symbol_max_dates= {}
 
     trade_data = []
-    for symbol in df_symbols["symbols"]:
-        try: 
-            response = marketstack_api_client.get_trade(symbol=symbol)
-            trade_data.extend(response["data"])
-        except Exception as error:
-            print(error)
-    df_trade = pd.DataFrame(trade_data)
 
+    for symbol in df_symbols["symbol"]:
+        if symbol in symbol_max_dates and pd.notnull(symbol_max_dates[symbol]):
+            date_from = (pd.to_datetime(symbol_max_dates[symbol])+pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+        else:
+            date_from = None
+        date_to = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        print(f"Fetching data for symbol {symbol} from {date_from} to {date_to}")
+        try:
+            response = marketstack_api_client.get_trade(symbol=symbol, date_from=date_from, date_to=date_to)
+            trade_data.extend(response["data"])
+        except Exception as e:
+            print(f"exception for{symbol}:{e}")
+
+    df_trade = pd.DataFrame(trade_data)
+    print(f"Extracted {len(df_trade)} new rows")
+    #print(df_trade.columns)
     return df_trade
-    
+ 
+
 def transform(df_trade: pd.DataFrame) -> pd.DataFrame:
+
+    #if no new records extracted
+
+    if df_trade.empty:
+        print("No new records extracted.")
+        return pd.DataFrame()
 
     # Normalize, filter, and type-cast the trade dataset before loading
     pd.options.mode.chained_assignment = 'warn' 
