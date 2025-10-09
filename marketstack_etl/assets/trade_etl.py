@@ -1,3 +1,11 @@
+from urllib import response
+import pandas as pd
+from pathlib import Path
+from sqlalchemy import Table, MetaData
+from logging import exception
+from datetime import datetime
+from assets.helpers import setup_logger
+from dotenv import load_dotenv
 import os
 from urllib import response
 from pathlib import Path
@@ -18,7 +26,7 @@ def extract_symbols(client) ->pd.DataFrame:
     return df_symbols
 
 # Iterate symbols and pull raw trade payloads from the Marketstack client
-   
+logger=setup_logger()
 def extract_trade(marketstack_api_client: MarketstackApiClient, 
                 df_symbols: pd.DataFrame,
                 target_engine,
@@ -32,7 +40,8 @@ def extract_trade(marketstack_api_client: MarketstackApiClient,
 
     inspector = inspect(target_engine)
     if not inspector.has_table(target_table):
-        print(f"Target table {target_table} not found. Do a full extract for all symbols.")
+        logger.info(f"Target table {target_table} not found. Do a full extract for all symbols.")
+        #print(f"Target table {target_table} not found. Do a full extract for all symbols.")
         symbol_max_dates = {}
     else:
         query = f"Select symbol, max(date) as max_date from {target_table} group by symbol"
@@ -51,15 +60,17 @@ def extract_trade(marketstack_api_client: MarketstackApiClient,
         else:
             date_from = None
         date_to = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
-
-        print(f"Fetching data for symbol {symbol} from {date_from} to {date_to}")
+        logger.info("f"Fetching data for symbol {symbol} from {date_from} to {date_to}"")
+        #print(f"Fetching data for symbol {symbol} from {date_from} to {date_to}")
         try:
             response = marketstack_api_client.get_trade(symbol=symbol, date_from=date_from, date_to=date_to)
             trade_data.extend(response["data"])
         except Exception as e:
-            print(f"exception for{symbol}:{e}")
+            logger.info(f"exception for{symbol}:{e}")
+            #print(f"exception for{symbol}:{e}")
 
     df_trade = pd.DataFrame(trade_data)
+    logger.info(f"Extracted {len(df_trade)} new rows")
     print(f"Extracted {len(df_trade)} new rows")
     #print(df_trade.columns)
     return df_trade
@@ -95,15 +106,15 @@ def transform(df_trade: pd.DataFrame) -> pd.DataFrame:
     df_trade["etl_load_timestamp"] = datetime.now()
     df_trade["data_source"] = "marketstack_api"
 
-    # Cast to DB-friendly types (nullable Int64 for volume; strings for timestamps)
+    # Cast to DB-friendly types
     df_trade["volume"] = df_trade["volume"].astype('Int64')
     df_trade["date"] = df_trade["date"].astype('str')
     df_trade["etl_load_timestamp"] = df_trade["etl_load_timestamp"].astype('str')
 
     return df_trade
 
-# Materialize a target table by cloning columns from existing metadata
 def _create_table(table_name: str, metadata: MetaData, engine: Engine):
+    # Materialize a target table by cloning columns from existing metadata
     existing_table = metadata.tables[table_name]
     new_metadata = MetaData()
     columns = [
@@ -114,9 +125,8 @@ def _create_table(table_name: str, metadata: MetaData, engine: Engine):
     new_metadata.create_all(bind=engine)
     return new_metadata
 
-# Upsert data in chunks using PostgreSQL ON CONFLICT for primary keys
-def load(data: pd.DataFrame, table_name: str, engine: Engine, source_metadata: MetaData, chunksize: int = 1000,
-):
+def load(data: pd.DataFrame, table_name: str, engine: Engine, source_metadata: MetaData, chunksize: int = 1000):
+    # Upsert data in chunks using PostgreSQL ON CONFLICT for primary keys
     target_metadata = _create_table(
         table_name=table_name, metadata=source_metadata, engine=engine
     )
@@ -124,23 +134,27 @@ def load(data: pd.DataFrame, table_name: str, engine: Engine, source_metadata: M
     max_length = len(data)
     key_columns = [pk_column.name for pk_column in table.primary_key.columns.values()]
 
-    # Stream rows in batches to control memory and transaction size
-    for i in range(0, max_length, chunksize):
-        if i + chunksize >= max_length:
-            lower_bound = i
-            upper_bound = max_length
-        else:
-            lower_bound = i
-            upper_bound = i + chunksize
-        insert_statement = postgresql.insert(table).values(
-            data[lower_bound:upper_bound]
-        )
-        # Conflict resolution: update non-key fields when PK already exists
-        upsert_statement = insert_statement.on_conflict_do_update(
-            index_elements=key_columns,
-            set_={
-                c.key: c for c in insert_statement.excluded if c.key not in key_columns
-            },
-        )
-        # Execute the batch upsert against the target engine
-        engine.execute(upsert_statement)
+    try:
+        # Stream rows in batches to control memory and transaction size
+        for i in range(0, max_length, chunksize):
+            if i + chunksize >= max_length:
+                lower_bound = i
+                upper_bound = max_length
+            else:
+                lower_bound = i
+                upper_bound = i + chunksize
+            insert_statement = postgresql.insert(table).values(
+                data[lower_bound:upper_bound]
+            )
+            # Conflict resolution: update non-key fields when PK already exists
+            upsert_statement = insert_statement.on_conflict_do_update(
+                index_elements=key_columns,
+                set_={
+                    c.key: c for c in insert_statement.excluded if c.key not in key_columns
+                },
+            )
+            # Execute the batch upsert against the target engine
+            engine.execute(upsert_statement)
+    except Exception as e:
+        logger.info("Failed to load data into the database")
+        logger.info(e)

@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine, Table, MetaData
+from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
-from sqlalchemy.orm import sessionmaker
 import pandas as pd
+from assets.helpers import setup_logger
+
+logger = setup_logger()
 
 class PostgreSqlClient:
     # Client for the PostgreSQL Database
@@ -12,15 +14,23 @@ class PostgreSqlClient:
         self.password = password
         self.port = port
 
-        connection_url = URL.create(
-            drivername="postgresql+pg8000",
-            username=username,
-            password=password,
-            host=server_name,
-            port=port,
-            database=database_name,
-        )
-        self.engine = create_engine(connection_url)
+        try: 
+            connection_url = URL.create(
+                drivername="postgresql+pg8000",
+                username=username,
+                password=password,
+                host=server_name,
+                port=port,
+                database=database_name,
+            )
+            self.engine = create_engine(connection_url)
+            logger.info("Database connection stablished")
+
+        except Exception as e:
+            logger.info("Error connecting with the Database")
+            logger.info(e)
+            
+        
 
     def read_table(self, table_name: str) -> pd.DataFrame:
         # Method to read a table from the DB into a pandas dataframe
