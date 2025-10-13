@@ -8,7 +8,7 @@ The pipeline supports both **full** and **incremental** load.
 | Component	| Technology Used |
 |----------------|-----------------------------|
 | Language/Libraries 	| Python 3.10.18, Pandas, SQLAlchemy |
-| API	| Marketstack API |
+| API	| [Marketstack API](https://marketstack.com/documentation_v2) |
 | Database	| PostgreSQL |
 | Logging 	| Loguru |
 | Containerization	| Docker |
