@@ -1,3 +1,16 @@
+"""
+Trade Data ETL Pipeline
+
+This is the complete ETL pipeline
+
+The pipeline performs the following steps:
+Extract stock symbols from source database
+Extract trade data from Marketstack API (with incremental loading)
+Transform and clean the data
+Load data into target PostgreSQL database with upsert capability
+
+"""
+
 from dotenv import load_dotenv
 import os
 from sqlalchemy.engine import URL, Engine
@@ -8,11 +21,11 @@ import pandas as pd
 import json
 from loguru import logger
 
-from assets.trade_etl import load, extract_symbols, extract_trade, transform
-from connectors.trade_api import MarketstackApiClient
-from connectors.postgresql import PostgreSqlClient
-from assets.helpers import get_schema_metadata
-from assets.helpers import setup_logger
+from marketstack_etl.assets.trade_etl import load, extract_symbols, extract_trade, transform
+from marketstack_etl.connectors.trade_api import MarketstackApiClient
+from marketstack_etl.connectors.postgresql import PostgreSqlClient
+from marketstack_etl.assets.helpers import get_schema_metadata
+from marketstack_etl.assets.helpers import setup_logger
 
 if __name__ == "__main__":
 
@@ -57,10 +70,6 @@ if __name__ == "__main__":
     # Transform the stock information
     stock_information = transform(stock_information)
 
-    # Debug Only
-    #stock_information.to_csv("stock_information2.csv", index=False)
-    #stock_information = pd.read_csv("stock_information2.csv")
-
     # Transform the Pandas Dataframe into a list of dictionaries
     stock_information = stock_information.to_dict('records')
 
@@ -76,7 +85,6 @@ if __name__ == "__main__":
             source_metadata=source_metadata
         )
     logger.info("Data Loading Process Finished!")
-
     
 
 

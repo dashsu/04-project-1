@@ -12,7 +12,6 @@ def get_schema_metadata(engine):
     metadata.reflect() 
     return metadata
 
-
 def setup_logger():
 
     logger.remove()
