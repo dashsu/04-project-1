@@ -31,10 +31,6 @@ Writes data to a PostgreSQL target table using SQLAlchemy.Supports incremental a
 ├── Dockerfile
 ├── images
 │   └── architecture-diagram.png
-├── logs
-│   ├── app_2025-10-13_06.jsonl
-│   ├── app_2025-10-13_07.jsonl
-│   └── app_2025-10-13_22.jsonl
 ├── marketstack_etl
 │   ├── __init__.py
 │   ├── assets
