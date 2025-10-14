@@ -56,16 +56,16 @@ if __name__ == "__main__":
     table_name = os.environ.get("TARGET_TABLE_NAME")
 
     # Create the clients for the connections
-    Postgre_Client = PostgreSqlClient(SOURCE_SERVER_NAME, SOURCE_DATABASE_NAME, SOURCE_DB_USERNAME, SOURCE_DB_PASSWORD, SOURCE_PORT)
-    Marketstack_Client= MarketstackApiClient(ACCESS_KEY)
+    postgre_client = PostgreSqlClient(SOURCE_SERVER_NAME, SOURCE_DATABASE_NAME, SOURCE_DB_USERNAME, SOURCE_DB_PASSWORD, SOURCE_PORT)
+    marketstack_client= MarketstackApiClient(ACCESS_KEY)
 
-    target_engine = Postgre_Client.engine
+    target_engine = postgre_client.engine
 
     # Extract the symbols in our database table
-    symbols = extract_symbols(Postgre_Client)
+    symbols = extract_symbols(postgre_client)
 
     # Extract the stock information for the symbols in our database
-    stock_information = extract_trade(Marketstack_Client, symbols,target_engine,table_name)
+    stock_information = extract_trade(marketstack_client, symbols,target_engine,table_name)
 
     # Transform the stock information
     stock_information = transform(stock_information)
@@ -76,12 +76,12 @@ if __name__ == "__main__":
 
     # Load the stock data into a table in our database
     logger.info("Load Process starting")
-    source_metadata = get_schema_metadata(engine=Postgre_Client.engine)
+    source_metadata = get_schema_metadata(engine=postgre_client.engine)
 
     load(
             data=stock_information,
             table_name=table_name,
-            engine=Postgre_Client.engine,
+            engine=postgre_client.engine,
             source_metadata=source_metadata
         )
     logger.info("Data Loading Process Finished!")
