@@ -25,7 +25,7 @@ class PostgreSqlClient:
         engine: SQLAlchemy engine object for database operations
     """
     
-    def __init__(self, server_name: str, database_name: str, username: str, password: str, port=5432):
+    def __init__(self, server_name: str, database_name: str, username: str, password: str, port: int = 5432):
         """
         Initialize PostgreSQL client with connection parameters.
         

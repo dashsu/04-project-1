@@ -58,7 +58,7 @@ def extract_trade(marketstack_api_client: MarketstackApiClient,
               price_currency, symbol, date
     """
 
-# Check if the taget thable exist in postgres
+# Check if the taget table exist in postgres
 
     inspector = inspect(target_engine)
     if not inspector.has_table(target_table):
@@ -88,22 +88,23 @@ def extract_trade(marketstack_api_client: MarketstackApiClient,
             logger.info(f"Skipping {symbol}: the extraction is already up to date.")
             continue
 
-        logger.info(f"Fetching data for symbol {symbol} from {date_from} to {date_to}")
+        logger.info(f"Fetching data for symbol {symbol} from {date_from or 'beginning'} to {date_to}")
         
         try:
             response = marketstack_api_client.get_trade(symbol=symbol, date_from=date_from, date_to=date_to)
-            if not response["data"]:
-                logger.info(f"No data returned for {symbol} for date {date_from} to {date_to}.")
-                continue
-            trade_data.extend(response["data"])
+
+            if response.get("data"):
+                trade_data.extend(response["data"])
+                logger.info(f"Fetched {len(response['data'])} trades for {symbol}.")
+            else:
+                logger.info(f"No data returned for {symbol}.")
         except Exception as e:
             logger.error(f"Extract failed for {symbol} :{e}")
             continue
-            #print(f"exception for{symbol}:{e}")
 
     df_trade = pd.DataFrame(trade_data)
     if df_trade.empty:
-        logger.warning(f"No trade data returned between {date_from} to {date_to}.")
+        logger.info(f"No trade data returned for any symbol.")
         return pd.DataFrame()
     #print (df_trade)
     return df_trade
@@ -123,9 +124,10 @@ def transform(df_trade: pd.DataFrame) -> pd.DataFrame:
     #if no new records extracted
 
     if df_trade.empty:
-        logger.info(f"No new records extracted.")
-        #print("No new records extracted.")
+        logger.info(f"No new trade records available for transformation.")
         return pd.DataFrame()
+    
+    logger.info(f"Starting transformation on {len(df_trade)} trade records.")
 
     # Normalize, filter, and type-cast the trade dataset before loading
     pd.options.mode.chained_assignment = None
@@ -153,7 +155,7 @@ def transform(df_trade: pd.DataFrame) -> pd.DataFrame:
     df_trade["volume"] = df_trade["volume"].astype('Int64')
     df_trade["date"] = df_trade["date"].astype('str')
     df_trade["etl_load_timestamp"] = df_trade["etl_load_timestamp"].astype('str')
-
+    logger.info(f"Transformation complete. returning {len(df_trade)} cleaned trade records." )
     return df_trade
 
 def _create_table(table_name: str, metadata: MetaData, engine: Engine):
