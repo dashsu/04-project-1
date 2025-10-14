@@ -26,6 +26,7 @@ Cleans and standardizes the raw API response into a structured DataFrame.Ensures
 Writes data to a PostgreSQL target table using SQLAlchemy.Supports incremental and upsert logic.
 
 ## Folder Structure 
+```
 .
 ├── Dockerfile
 ├── images
@@ -46,7 +47,7 @@ Writes data to a PostgreSQL target table using SQLAlchemy.Supports incremental a
 ├── project-plan.md
 ├── README.md
 └── requirements.txt
-
+```
 ## Configuration
 
 <pre>
