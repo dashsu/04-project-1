@@ -15,19 +15,22 @@ Data Analysts: Require clean and structured datasets for analysis of stock trade
 > - Which symbols have the highest trading volume?
 ## Source datasets
 
-| Source name | Source type | Source documentation |
-| - | - | - |
-| Trade database | PostgreSQL database | - |
-| MarketStack API | REST API | - |
+| Source name | Source type |
+| - | - |
+| Trade database | PostgreSQL database |
+| MarketStack API | REST API |
 
 ## Solution architecture
 
 - Data extraction
+  
     Extract data from Marketstack API using the python ETL pipeline.
     Incremental extraction based on latest data pulled from the source.
 - Data transformation
+  
     Clean missing and incorrect data.
     Standardize date formats.
 - Data Loading
+  
     Load transformed data into PostgreSQL using SQLAlchemy.
     Do a full load if target table is empty, incremental otherwise.
