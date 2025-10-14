@@ -59,4 +59,20 @@ docker run --env-file .env marketstack-etl
 pytest tests/
 </pre>
 ## Logging 
-
+The logs are printed to the console.The logs include timestamp, module details and the log message.
+Sample log:
+<pre>
+2025-10-14 01:58:13.001 | INFO     | __main__:<module>:33 | Pipeline Starting {}
+2025-10-14 01:58:13.008 | INFO     | marketstack_etl.connectors.postgresql:__init__:58 | Database connection stablished {}
+2025-10-14 01:58:13.055 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:72 | Target table stock_information is empty. Performing full extract for all symbols. {}
+2025-10-14 01:58:13.055 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:91 | Fetching data for symbol AAPL from beginning to 2025-10-13 {}
+2025-10-14 01:58:13.380 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:98 | Fetched 100 trades for AAPL. {}
+2025-10-14 01:58:13.381 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:91 | Fetching data for symbol MSFT from beginning to 2025-10-13 {}
+2025-10-14 01:58:13.687 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:98 | Fetched 100 trades for MSFT. {}
+2025-10-14 01:58:13.688 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:91 | Fetching data for symbol GOOGL from beginning to 2025-10-13 {}
+2025-10-14 01:58:13.978 | INFO     | marketstack_etl.assets.trade_etl:extract_trade:98 | Fetched 100 trades for GOOGL. {}
+2025-10-14 01:58:13.982 | INFO     | marketstack_etl.assets.trade_etl:transform:130 | Starting transformation on 300 trade records. {}
+2025-10-14 01:58:13.996 | INFO     | marketstack_etl.assets.trade_etl:transform:158 | Transformation complete. returning 300 cleaned trade records. {}
+2025-10-14 01:58:14.000 | INFO     | __main__:<module>:78 | Load Process starting {}
+2025-10-14 01:58:14.096 | INFO     | __main__:<module>:87 | Data Loading Process Finished! {}
+</pre>
