@@ -26,6 +26,26 @@ Cleans and standardizes the raw API response into a structured DataFrame.Ensures
 Writes data to a PostgreSQL target table using SQLAlchemy.Supports incremental and upsert logic.
 
 ## Folder Structure 
+.
+├── Dockerfile
+├── images
+│   └── architecture-diagram.png
+├── logs
+│   ├── app_2025-10-13_06.jsonl
+│   ├── app_2025-10-13_07.jsonl
+│   └── app_2025-10-13_22.jsonl
+├── marketstack_etl
+│   ├── __init__.py
+│   ├── assets
+│   ├── connectors
+│   ├── data
+│   └── trade_pipeline.py
+├── marketstack_etl_tests
+│   ├── __init__.py
+│   └── connectors
+├── project-plan.md
+├── README.md
+└── requirements.txt
 
 ## Configuration
 
